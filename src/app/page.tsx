@@ -22,11 +22,15 @@ export default function Dashboard() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black" />
         <div className="absolute inset-0 flex flex-col justify-center px-6 md:px-8">
+          <p className="text-[#D4AF37]/80 text-xs md:text-sm uppercase tracking-[0.2em] mb-2">Revolution Roofing</p>
           <h1 className="text-3xl md:text-5xl font-bold gold-text mb-2">
             RevoRoof AI
           </h1>
-          <p className="text-gray-400 text-lg md:text-xl max-w-xl">
-            Turn every field rep into an instant roofing expert
+          <p className="text-gray-200 text-base md:text-xl max-w-xl mb-1">
+            Turn every field rep into an instant roofing expert.
+          </p>
+          <p className="text-[#D4AF37]/80 italic text-sm md:text-base tracking-wide">
+            &ldquo;You Don&rsquo;t Need A Ladder &mdash; You Need A Network&rdquo;
           </p>
           <div className="mt-6 flex gap-4">
             <Link href="/inspection/new" className="btn-primary inline-flex items-center gap-2">

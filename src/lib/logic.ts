@@ -3,7 +3,7 @@
 import { Database } from '@/lib/supabase/types'
 
 export function calculateRiskScore(damageCount: number, highSeverityCount: number, confidence: number): number {
-  let riskScore = damageCount * 5 + highSeverityCount * 15 + (100 - confidence) * 0.5
+  const riskScore = damageCount * 5 + highSeverityCount * 15 + (100 - confidence) * 0.5
   return Math.min(Math.max(riskScore, 1), 100)
 }
 
