@@ -1,38 +1,9 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-  typescript: { ignoreBuildErrors: true },
-  eslint: { ignoreDuringBuilds: true },
+module.exports = {
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'images.pexels.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.supabase.co',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.amazonaws.com',
-      },
+      { protocol: 'https', hostname: 'images.pexels.com' },
+      { protocol: 'https', hostname: 'jkahbsdcyrigoxkqksyj.supabase.co' },
     ],
   },
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '10mb',
-    },
-  },
-  webpack: (config) => {
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      net: false,
-      tls: false,
-    };
-    return config;
-  },
 };
-
-module.exports = nextConfig;

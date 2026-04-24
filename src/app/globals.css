@@ -1,64 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;700;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --gold: #D4AF37;
-  --electric-blue: #00D9FF;
-  --black: #000000;
-  --white: #FFFFFF;
-  --gray-900: #111111;
-  --gray-800: #1a1a1a;
-  --gray-700: #2a2a2a;
+  --revo-bg: #0A0F1F;
+  --revo-surface: #0F1729;
+  --revo-ink: #E5E9F2;
+  --revo-accent: #1F3C88;
+  --revo-accent-2: #3B82F6;
+  --revo-gold: #D4A24C;
 }
 
-@layer base {
-  body {
-    @apply bg-black text-white;
-  }
+html, body { background: var(--revo-bg); color: var(--revo-ink); font-family: 'Inter', system-ui, sans-serif; }
+h1, h2, h3, .display { font-family: 'Playfair Display', serif; letter-spacing: -0.02em; }
+
+.revo-hero-bg {
+  background:
+    radial-gradient(ellipse at top, rgba(31, 60, 136, 0.4), transparent 60%),
+    linear-gradient(180deg, #0A0F1F 0%, #050812 100%);
 }
 
-@layer components {
-  .gold-gradient {
-    background: linear-gradient(135deg, #D4AF37 0%, #F4E5C2 50%, #D4AF37 100%);
-  }
-  
-  .gold-text {
-    background: linear-gradient(135deg, #D4AF37 0%, #F4E5C2 50%, #D4AF37 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  
-  .glass-panel {
-    @apply bg-gray-900/80 backdrop-blur-md border border-gray-800;
-  }
-  
-  .btn-primary {
-    @apply bg-gradient-to-r from-[#D4AF37] to-[#F4E5C2] text-black font-semibold px-6 py-3 rounded-lg 
-           hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-yellow-900/20;
-  }
-  
-  .btn-secondary {
-    @apply border border-gray-700 bg-gray-900 text-white px-6 py-3 rounded-lg 
-           hover:bg-gray-800 transition-all active:scale-95;
-  }
-  
-  .risk-low {
-    @apply bg-green-500/20 text-green-400 border-green-500/30;
-  }
-  
-  .risk-medium {
-    @apply bg-yellow-500/20 text-yellow-400 border-yellow-500/30;
-  }
-  
-  .risk-high {
-    @apply bg-red-500/20 text-red-400 border-red-500/30;
-  }
+.revo-gradient-text {
+  background: linear-gradient(90deg, #D4A24C, #3B82F6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-@layer utilities {
-  .text-shadow-gold {
-    text-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);
-  }
-}
+@keyframes revo-fade-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.revo-fade-up { animation: revo-fade-up 700ms cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+.revo-fade-up-delay-1 { animation-delay: 150ms; }
+.revo-fade-up-delay-2 { animation-delay: 300ms; }
+.revo-fade-up-delay-3 { animation-delay: 450ms; }

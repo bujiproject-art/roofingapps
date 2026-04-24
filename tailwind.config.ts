@@ -1,31 +1,24 @@
-import type { Config } from "tailwindcss";
-
+import type { Config } from 'tailwindcss';
 const config: Config = {
-  content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  content: ['./src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        gold: {
-          DEFAULT: '#D4AF37',
-          light: '#F4E5C2',
-          dark: '#B8941F',
+        revo: {
+          bg: '#0A0F1F',
+          surface: '#0F1729',
+          ink: '#E5E9F2',
+          accent: '#1F3C88',
+          accent2: '#3B82F6',
+          gold: '#D4A24C',
         },
-        'electric-blue': '#00D9FF',
       },
-      backgroundImage: {
-        'gold-gradient': 'linear-gradient(135deg, #D4AF37 0%, #F4E5C2 50%, #D4AF37 100%)',
-      },
-      animation: {
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      fontFamily: {
+        display: ['"Playfair Display"', 'serif'],
+        body: ['"Inter"', 'sans-serif'],
       },
     },
   },
   plugins: [],
-  darkMode: 'class',
 };
-
 export default config;

@@ -1,168 +1,74 @@
-"use client";
+import Link from 'next/link';
 
-import { useState } from "react";
-import { Camera, FileText, Users, TrendingUp, Plus, Clock, MapPin } from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-
-export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState("today");
-
+export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-black">
-      {/* Hero Section with Pexels Image */}
-      <div className="relative h-64 md:h-80 overflow-hidden">
-        <Image
-          src="https://images.pexels.com/photos/11912130/pexels-photo-11912130.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
-          alt="A picturesque red tiled roof featuring chimneys and skylight windows against a blue sky — hero imagery by Mathias Reding on Pexels."
-          fill
-          className="object-cover opacity-40"
-          loading="eager"
-          fetchPriority="high"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black" />
-        <div className="absolute inset-0 flex flex-col justify-center px-6 md:px-8">
-          <p className="text-[#D4AF37]/80 text-xs md:text-sm uppercase tracking-[0.2em] mb-2">Revolution Roofing</p>
-          <h1 className="text-3xl md:text-5xl font-bold gold-text mb-2">
-            RevoRoof AI
-          </h1>
-          <p className="text-gray-200 text-base md:text-xl max-w-xl mb-1">
-            Turn every field rep into an instant roofing expert.
-          </p>
-          <p className="text-[#D4AF37]/80 italic text-sm md:text-base tracking-wide">
-            &ldquo;You Don&rsquo;t Need A Ladder &mdash; You Need A Network&rdquo;
-          </p>
-          <div className="mt-6 flex gap-4">
-            <Link href="/inspection/new" className="btn-primary inline-flex items-center gap-2">
-              <Plus className="w-5 h-5" />
-              New Inspection
-            </Link>
-          </div>
+    <main className="revo-hero-bg min-h-screen">
+      {/* NAV */}
+      <nav className="flex items-center justify-between px-6 md:px-12 py-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#D4A24C] to-[#3B82F6] flex items-center justify-center text-[#0A0F1F] font-bold text-xl">R</div>
+          <span className="font-display text-xl tracking-tight">Revo Roofing AI</span>
         </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="px-4 md:px-8 -mt-8 relative z-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="glass-panel rounded-xl p-4 border-l-4 border-[#D4AF37]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-400 text-sm">Today&apos;s Inspections</p>
-                <p className="text-2xl font-bold text-white">8</p>
-              </div>
-              <Camera className="w-8 h-8 text-[#D4AF37] opacity-80" />
-            </div>
-          </div>
-          <div className="glass-panel rounded-xl p-4 border-l-4 border-[#00D9FF]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-400 text-sm">Reports Sent</p>
-                <p className="text-2xl font-bold text-white">12</p>
-              </div>
-              <FileText className="w-8 h-8 text-[#00D9FF] opacity-80" />
-            </div>
-          </div>
-          <div className="glass-panel rounded-xl p-4 border-l-4 border-purple-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-400 text-sm">Active Leads</p>
-                <p className="text-2xl font-bold text-white">24</p>
-              </div>
-              <Users className="w-8 h-8 text-purple-500 opacity-80" />
-            </div>
-          </div>
-          <div className="glass-panel rounded-xl p-4 border-l-4 border-green-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-400 text-sm">Close Rate</p>
-                <p className="text-2xl font-bold text-white">68%</p>
-              </div>
-              <TrendingUp className="w-8 h-8 text-green-500 opacity-80" />
-            </div>
-          </div>
+        <div className="flex items-center gap-6">
+          <Link href="/login" className="text-[#E5E9F2]/80 hover:text-white text-sm transition">Login</Link>
+          <Link href="/register" className="px-5 py-2.5 rounded-full bg-[#D4A24C] text-[#0A0F1F] font-semibold text-sm hover:bg-[#E5B366] transition">Become an Expert</Link>
         </div>
-      </div>
+      </nav>
 
-      {/* Recent Inspections */}
-      <div className="px-4 md:px-8 mt-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-white">Recent Inspections</h2>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setActiveTab("today")}
-              className={`px-3 py-1 rounded-full text-sm ${activeTab === "today" ? "bg-[#D4AF37] text-black" : "bg-gray-800 text-gray-400"}`}
-            >
-              Today
-            </button>
-            <button 
-              onClick={() => setActiveTab("week")}
-              className={`px-3 py-1 rounded-full text-sm ${activeTab === "week" ? "bg-[#D4AF37] text-black" : "bg-gray-800 text-gray-400"}`}
-            >
-              This Week
-            </button>
-          </div>
+      {/* HERO */}
+      <section className="max-w-6xl mx-auto px-6 md:px-12 pt-24 pb-32 text-center">
+        <div className="revo-fade-up text-[#D4A24C] uppercase tracking-[0.3em] text-xs font-semibold mb-6">The Future of Roofing</div>
+        <h1 className="revo-fade-up revo-fade-up-delay-1 font-display text-5xl md:text-7xl leading-[0.95] font-bold mb-8">
+          Become a <span className="revo-gradient-text">Certified AI Roofing Expert</span><br />
+          in 30 Days.
+        </h1>
+        <p className="revo-fade-up revo-fade-up-delay-2 text-xl md:text-2xl text-[#E5E9F2]/80 max-w-3xl mx-auto mb-12 leading-relaxed">
+          Drone inspections. AI damage analysis. Instant proposals. A platform that turns ambitious entrepreneurs into six-figure roofing consultants — backed by Revo.
+        </p>
+        <div className="revo-fade-up revo-fade-up-delay-3 flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <Link href="/register" className="px-8 py-4 rounded-full bg-[#D4A24C] text-[#0A0F1F] font-bold text-base hover:bg-[#E5B366] transition shadow-xl shadow-[#D4A24C]/20">
+            Start Your Application →
+          </Link>
+          <Link href="#how" className="px-8 py-4 rounded-full border border-[#E5E9F2]/20 hover:border-[#E5E9F2]/50 text-[#E5E9F2] transition">
+            How It Works
+          </Link>
         </div>
+      </section>
 
-        <div className="space-y-3">
+      {/* VALUE STRIP */}
+      <section id="how" className="border-t border-[#E5E9F2]/10 py-20">
+        <div className="max-w-6xl mx-auto px-6 md:px-12 grid md:grid-cols-3 gap-12">
           {[
-            { id: 1, address: "1245 Highland Ave, Austin, TX", status: "High Risk", time: "2 hours ago", risk: "high" },
-            { id: 2, address: "8924 Oak Drive, Austin, TX", status: "Medium Risk", time: "4 hours ago", risk: "medium" },
-            { id: 3, address: "456 Pine Street, Austin, TX", status: "Low Risk", time: "6 hours ago", risk: "low" },
-          ].map((inspection) => (
-            <Link 
-              key={inspection.id}
-              href={`/inspection/report?id=${inspection.id}`}
-              className="block glass-panel rounded-xl p-4 hover:bg-gray-800/50 transition-all group"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center">
-                    <MapPin className="w-6 h-6 text-[#D4AF37]" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white group-hover:text-[#D4AF37] transition-colors">
-                      {inspection.address}
-                    </h3>
-                    <div className="flex items-center gap-2 text-sm text-gray-400">
-                      <Clock className="w-3 h-3" />
-                      {inspection.time}
-                    </div>
-                  </div>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
-                  inspection.risk === "high" ? "risk-high" : 
-                  inspection.risk === "medium" ? "risk-medium" : "risk-low"
-                }`}>
-                  {inspection.status}
-                </span>
-              </div>
-            </Link>
+            { title: 'AI-Powered Inspections', body: 'Fly a drone, upload photos, get a professional damage report in seconds. Claude vision, GPT, or Gemini — your choice.' },
+            { title: 'Instant Proposals', body: 'From inspection to signed contract in one meeting. Proposals auto-generated from ATTOM property data + your pricing.' },
+            { title: 'Full CRM + Training', body: 'Your own pipeline, your own customers, backed by our 10-module training course and live expert community.' },
+          ].map((item, i) => (
+            <div key={i} className="text-center">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#D4A24C] to-[#3B82F6] mx-auto mb-6" />
+              <h3 className="font-display text-2xl mb-4">{item.title}</h3>
+              <p className="text-[#E5E9F2]/70 leading-relaxed">{item.body}</p>
+            </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* Quick Actions */}
-      <div className="px-4 md:px-8 mt-8 mb-8">
-        <h2 className="text-xl font-bold text-white mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Link href="/inspection/new" className="glass-panel rounded-xl p-6 text-center hover:bg-gray-800/50 transition-all group">
-            <Camera className="w-8 h-8 text-[#D4AF37] mx-auto mb-2 group-hover:scale-110 transition-transform" />
-            <span className="text-sm font-medium">New Inspection</span>
-          </Link>
-          <Link href="/crm" className="glass-panel rounded-xl p-6 text-center hover:bg-gray-800/50 transition-all group">
-            <Users className="w-8 h-8 text-[#00D9FF] mx-auto mb-2 group-hover:scale-110 transition-transform" />
-            <span className="text-sm font-medium">View Leads</span>
-          </Link>
-          <Link href="/history" className="glass-panel rounded-xl p-6 text-center hover:bg-gray-800/50 transition-all group">
-            <FileText className="w-8 h-8 text-purple-500 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-            <span className="text-sm font-medium">History</span>
-          </Link>
-          <Link href="/admin" className="glass-panel rounded-xl p-6 text-center hover:bg-gray-800/50 transition-all group">
-            <TrendingUp className="w-8 h-8 text-green-500 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-            <span className="text-sm font-medium">Analytics</span>
-          </Link>
+      {/* CTA */}
+      <section className="py-32 text-center border-t border-[#E5E9F2]/10">
+        <h2 className="font-display text-4xl md:text-5xl mb-6">The First 100 Experts<br /><span className="revo-gradient-text">Define the Network.</span></h2>
+        <p className="text-[#E5E9F2]/70 text-lg mb-10 max-w-2xl mx-auto">Apply now. Paul Mikel reviews every application personally.</p>
+        <Link href="/register" className="inline-block px-10 py-5 rounded-full bg-gradient-to-r from-[#D4A24C] to-[#3B82F6] text-[#0A0F1F] font-bold text-lg hover:opacity-90 transition shadow-2xl">
+          Apply to Become an Expert
+        </Link>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="border-t border-[#E5E9F2]/10 py-8 px-6 md:px-12 text-sm text-[#E5E9F2]/50 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>© 2026 Revo Roofing AI. Built with Agent Midas.</div>
+        <div className="flex gap-6">
+          <Link href="/login" className="hover:text-[#E5E9F2] transition">Expert Login</Link>
+          <Link href="mailto:paul@revoride.com" className="hover:text-[#E5E9F2] transition">Contact Paul</Link>
         </div>
-      </div>
-    </div>
+      </footer>
+    </main>
   );
 }

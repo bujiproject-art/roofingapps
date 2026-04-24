@@ -1,21 +1,22 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import AppShell from "@/components/layout/AppShell";
-
-const inter = Inter({ subsets: ["latin"] });
+import type { Metadata } from 'next';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: "RevoRoof AI — Revolution Roofing",
-  description: "AI-powered roof inspection platform — Photo → Analysis → Report → Close",
+  title: 'Revo Roofing AI — The Future of Roofing',
+  description: 'Recruit, train, and deploy AI-powered roofing experts. Drone inspection, automated proposals, instant insurance documentation.',
+  openGraph: {
+    title: 'Revo Roofing AI',
+    description: 'The AI-powered platform for modern roofing experts.',
+    url: 'https://revo.agentmidas.xyz',
+    siteName: 'Revo Roofing AI',
+    type: 'website',
+  },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.className} bg-black text-white antialiased`}>
-        <AppShell>{children}</AppShell>
-      </body>
+    <html lang="en">
+      <body className="min-h-screen">{children}</body>
     </html>
   );
 }
