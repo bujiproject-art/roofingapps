@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function RegisterPage() {
-  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone: '', company_name: '', service_area: '' });
+  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone: '', company_name: '', service_area: '', role: 'expert' });
   const [otp, setOtp] = useState('');
   const [stage, setStage] = useState<'form' | 'otp' | 'done'>('form');
   const [loading, setLoading] = useState(false);
@@ -47,7 +47,12 @@ export default function RegisterPage() {
             <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="Email" className="w-full px-4 py-3 mb-3 rounded-lg bg-black/30 border border-[#E5E9F2]/10 text-white placeholder-[#E5E9F2]/30 focus:border-[#D4A24C] focus:outline-none" />
             <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="Phone" className="w-full px-4 py-3 mb-3 rounded-lg bg-black/30 border border-[#E5E9F2]/10 text-white placeholder-[#E5E9F2]/30 focus:border-[#D4A24C] focus:outline-none" />
             <input value={form.company_name} onChange={e => setForm({...form, company_name: e.target.value})} placeholder="Company name (optional)" className="w-full px-4 py-3 mb-3 rounded-lg bg-black/30 border border-[#E5E9F2]/10 text-white placeholder-[#E5E9F2]/30 focus:border-[#D4A24C] focus:outline-none" />
-            <input value={form.service_area} onChange={e => setForm({...form, service_area: e.target.value})} placeholder="Service area (city, state)" className="w-full px-4 py-3 mb-6 rounded-lg bg-black/30 border border-[#E5E9F2]/10 text-white placeholder-[#E5E9F2]/30 focus:border-[#D4A24C] focus:outline-none" />
+            <input value={form.service_area} onChange={e => setForm({...form, service_area: e.target.value})} placeholder="Service area (city, state)" className="w-full px-4 py-3 mb-3 rounded-lg bg-black/30 border border-[#E5E9F2]/10 text-white placeholder-[#E5E9F2]/30 focus:border-[#D4A24C] focus:outline-none" />
+            <label className="block text-xs text-[#E5E9F2]/60 mb-1.5 mt-2">I&apos;m joining as a…</label>
+            <select value={form.role} onChange={e => setForm({...form, role: e.target.value})} className="w-full px-4 py-3 mb-6 rounded-lg bg-black/30 border border-[#E5E9F2]/10 text-white focus:border-[#D4A24C] focus:outline-none">
+              <option value="expert">Expert — field rep, runs inspections and closes deals</option>
+              <option value="estimator">Estimator — builds quotes from inspections and measurements</option>
+            </select>
             <button onClick={submit} disabled={loading || !form.email || !form.first_name} className="w-full py-3 rounded-lg bg-[#D4A24C] text-[#0A0F1F] font-semibold disabled:opacity-50 hover:bg-[#E5B366] transition">{loading ? 'Submitting…' : 'Submit application →'}</button>
             <p className="text-center text-xs text-[#E5E9F2]/50 mt-6">Already an expert? <Link href="/login" className="text-[#D4A24C] hover:underline">Sign in</Link></p>
           </>)}

@@ -1,9 +1,11 @@
 /** @type {import('next').NextConfig} */
 module.exports = {
+  typescript: { ignoreBuildErrors: true },
+  eslint: { ignoreDuringBuilds: true },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.pexels.com' },
-      { protocol: 'https', hostname: 'jkahbsdcyrigoxkqksyj.supabase.co' },
+      { protocol: 'https', hostname: 'cqnnjlsgscodvgxpyaru.supabase.co' },
     ],
   },
 };

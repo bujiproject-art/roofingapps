@@ -1,52 +1,77 @@
-import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { redirect } from 'next/navigation';
+import { Users, Briefcase, DollarSign, Trophy, Sparkles } from 'lucide-react';
+import Link from 'next/link';
 
-export default async function AdminDashboard() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-  const { data: profile } = await supabaseAdmin.from('revo_users').select('role, first_name').eq('id', user.id).maybeSingle();
-  if (profile?.role !== 'admin') redirect('/dashboard');
+export default async function AdminOverview() {
+  const period = new Date().toISOString().slice(0, 7);
+  const [{ count: experts }, { count: customers }, { count: jobs }, { data: lb }, { data: recentJobs }] = await Promise.all([
+    supabaseAdmin.from('revo_users').select('id', { count: 'exact', head: true }).eq('role', 'expert'),
+    supabaseAdmin.from('revo_customers').select('id', { count: 'exact', head: true }),
+    supabaseAdmin.from('revo_jobs').select('id', { count: 'exact', head: true }),
+    supabaseAdmin.from('revo_leaderboard').select('total_revenue, jobs_completed').eq('period', period),
+    supabaseAdmin.from('revo_jobs').select('id, job_number, status, estimated_cost, created_at, revo_customers(name, city, state)').order('created_at', { ascending: false }).limit(8),
+  ]);
 
-  const { count: expertCount } = await supabaseAdmin.from('revo_users').select('id', { count: 'exact', head: true }).eq('role', 'expert');
-  const { count: customerCount } = await supabaseAdmin.from('revo_customers').select('id', { count: 'exact', head: true });
-  const { count: jobCount } = await supabaseAdmin.from('revo_jobs').select('id', { count: 'exact', head: true });
+  const networkRevenue = (lb || []).reduce((s, r) => s + Number(r.total_revenue || 0), 0);
+  const networkJobs = (lb || []).reduce((s, r) => s + (r.jobs_completed || 0), 0);
 
   return (
-    <main className="revo-hero-bg min-h-screen">
-      <nav className="flex items-center justify-between px-6 md:px-12 py-6 border-b border-[#E5E9F2]/10">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#D4A24C] to-[#3B82F6] flex items-center justify-center text-[#0A0F1F] font-bold">R</div>
-          <span className="font-display">Revo Admin</span>
+    <main className="p-8 max-w-7xl mx-auto">
+      <header className="mb-8">
+        <h1 className="font-display text-4xl mb-1">Admin overview</h1>
+        <p className="text-[#E5E9F2]/60">Network performance for {period}</p>
+      </header>
+
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <Tile icon={Users} label="Experts" value={(experts || 0).toString()} accent="gold" href="/admin/experts" />
+        <Tile icon={Users} label="Customers" value={(customers || 0).toString()} accent="blue" href="/admin/customers" />
+        <Tile icon={Briefcase} label="Jobs" value={(jobs || 0).toString()} accent="emerald" href="/admin/jobs" />
+        <Tile icon={DollarSign} label="Network revenue" value={`$${Math.round(networkRevenue).toLocaleString()}`} accent="gold" />
+        <Tile icon={Trophy} label="Jobs closed" value={networkJobs.toString()} accent="emerald" />
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-[#0F1729] border border-[#E5E9F2]/10 rounded-xl p-6">
+          <h2 className="font-display text-lg mb-4">Recent network activity</h2>
+          {(recentJobs || []).length === 0 ? <p className="text-sm text-[#E5E9F2]/50">No activity yet.</p> : (
+            <ul className="divide-y divide-[#E5E9F2]/5">
+              {(recentJobs || []).map(j => (
+                <li key={j.id} className="py-3 flex items-center justify-between text-sm">
+                  <div>
+                    <span className="font-mono text-xs text-[#D4A24C] mr-2">{j.job_number}</span>
+                    <span>{j.revo_customers?.name || 'Customer'}</span>
+                    <span className="text-xs text-[#E5E9F2]/50 ml-2">· {j.status}</span>
+                  </div>
+                  <div className="text-[#D4A24C] font-display">{j.estimated_cost ? `$${Number(j.estimated_cost).toLocaleString()}` : '—'}</div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-        <div className="flex items-center gap-6 text-sm">
-          <Link href="/admin/settings" className="text-[#E5E9F2]/60 hover:text-white transition">Settings</Link>
-          <div className="text-[#D4A24C]">{profile?.first_name || 'Admin'}</div>
+
+        <div className="bg-gradient-to-br from-[#D4A24C]/10 to-[#3B82F6]/10 border border-[#D4A24C]/30 rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-3"><Sparkles className="w-4 h-4 text-[#D4A24C]" /><span className="font-display text-sm uppercase tracking-wider">Network growth</span></div>
+          <div className="space-y-3 text-sm">
+            <Link href="/admin/experts" className="flex items-center justify-between text-[#E5E9F2]/80 hover:text-white"><span>Manage experts</span><span className="text-[#D4A24C]">→</span></Link>
+            <Link href="/admin/leaderboard" className="flex items-center justify-between text-[#E5E9F2]/80 hover:text-white"><span>Edit leaderboard</span><span className="text-[#D4A24C]">→</span></Link>
+            <Link href="/admin/courses" className="flex items-center justify-between text-[#E5E9F2]/80 hover:text-white"><span>Course modules</span><span className="text-[#D4A24C]">→</span></Link>
+            <Link href="/admin/rag" className="flex items-center justify-between text-[#E5E9F2]/80 hover:text-white"><span>Knowledge base</span><span className="text-[#D4A24C]">→</span></Link>
+            <Link href="/admin/emails" className="flex items-center justify-between text-[#E5E9F2]/80 hover:text-white"><span>Email sequences</span><span className="text-[#D4A24C]">→</span></Link>
+            <Link href="/admin/analytics" className="flex items-center justify-between text-[#E5E9F2]/80 hover:text-white"><span>Analytics</span><span className="text-[#D4A24C]">→</span></Link>
+          </div>
         </div>
-      </nav>
-      <section className="max-w-6xl mx-auto px-6 md:px-12 py-12">
-        <h1 className="font-display text-4xl mb-12">Revo Network Overview</h1>
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-[#0F1729] border border-[#E5E9F2]/10 rounded-xl p-6"><div className="text-[#E5E9F2]/60 text-sm mb-2">Roofing Experts</div><div className="font-display text-4xl">{expertCount ?? 0}</div></div>
-          <div className="bg-[#0F1729] border border-[#E5E9F2]/10 rounded-xl p-6"><div className="text-[#E5E9F2]/60 text-sm mb-2">Total Customers</div><div className="font-display text-4xl">{customerCount ?? 0}</div></div>
-          <div className="bg-[#0F1729] border border-[#E5E9F2]/10 rounded-xl p-6"><div className="text-[#E5E9F2]/60 text-sm mb-2">Active Jobs</div><div className="font-display text-4xl">{jobCount ?? 0}</div></div>
-        </div>
-        <div className="bg-[#0F1729]/60 border border-[#E5E9F2]/10 rounded-xl p-8">
-          <h2 className="font-display text-2xl mb-4">Admin features (rolling out this week)</h2>
-          <ul className="space-y-3 text-[#E5E9F2]/70">
-            <li>• Full expert CRM — view/edit every expert, suspend/activate</li>
-            <li>• Global customer + job view across all experts</li>
-            <li>• Leaderboard import — CSV upload of performance data</li>
-            <li>• RAG document ingestion — Google Doc URL to live chatbot</li>
-            <li>• FAQ + Course module editor</li>
-            <li>• Email catalog + sequence builder (10-step contractor onboarding)</li>
-            <li>• LLM provider selector (Anthropic / OpenAI / Gemini)</li>
-            <li>• API key management — ATTOM, Resend, LLM providers</li>
-          </ul>
-        </div>
-      </section>
+      </div>
     </main>
   );
+}
+
+function Tile({ icon: Icon, label, value, accent, href }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string; accent: 'gold' | 'blue' | 'emerald'; href?: string }) {
+  const colors = { gold: 'text-[#D4A24C]', blue: 'text-[#3B82F6]', emerald: 'text-emerald-400' };
+  const inner = (
+    <div className="bg-[#0F1729] border border-[#E5E9F2]/10 rounded-xl p-4">
+      <div className="flex items-center justify-between mb-2"><span className="text-[10px] uppercase tracking-widest text-[#E5E9F2]/50">{label}</span><Icon className={`w-4 h-4 ${colors[accent]}`} /></div>
+      <div className={`font-display text-2xl ${colors[accent]}`}>{value}</div>
+    </div>
+  );
+  return href ? <Link href={href}>{inner}</Link> : inner;
 }

@@ -3,7 +3,14 @@ import { createServerClient } from '@supabase/ssr';
 
 const PROTECTED_DASHBOARD = /^\/dashboard(\/.*)?$/;
 const PROTECTED_ADMIN = /^\/admin(\/.*)?$/;
+const PROTECTED_ESTIMATOR = /^\/estimator(\/.*)?$/;
 const AUTH_PAGES = /^\/(login|register)$/;
+
+function destForRole(role: string | null | undefined): string {
+  if (role === 'admin') return '/admin';
+  if (role === 'estimator') return '/estimator';
+  return '/dashboard';
+}
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
@@ -14,9 +21,10 @@ export async function middleware(request: NextRequest) {
     {
       cookies: {
         getAll: () => request.cookies.getAll(),
-        setAll: (cookies: Array<{ name: string; value: string; options: Record<string, unknown> }>) => cookies.forEach(({ name, value, options }) => response.cookies.set(name, value, options)),
+        setAll: (cookies: Array<{ name: string; value: string; options: Record<string, unknown> }>) =>
+          cookies.forEach(({ name, value, options }) => response.cookies.set(name, value, options)),
       },
-    }
+    },
   );
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -24,21 +32,31 @@ export async function middleware(request: NextRequest) {
 
   // Gate auth pages: if logged in, bounce to their dashboard
   if (AUTH_PAGES.test(pathname) && user) {
-    const { data: profile } = await supabase.from('revo_users').select('role').eq('id', user.id).maybeSingle();
-    const destination = profile?.role === 'admin' ? '/admin' : '/dashboard';
-    return NextResponse.redirect(new URL(destination, request.url));
+    const { data: profile } = await supabase
+      .from('revo_users').select('role').eq('id', user.id).maybeSingle();
+    return NextResponse.redirect(new URL(destForRole(profile?.role), request.url));
   }
 
   // Gate protected pages: if not logged in, bounce to /login
-  if ((PROTECTED_DASHBOARD.test(pathname) || PROTECTED_ADMIN.test(pathname)) && !user) {
+  if (
+    (PROTECTED_DASHBOARD.test(pathname) ||
+      PROTECTED_ADMIN.test(pathname) ||
+      PROTECTED_ESTIMATOR.test(pathname)) &&
+    !user
+  ) {
     return NextResponse.redirect(new URL('/login?next=' + encodeURIComponent(pathname), request.url));
   }
 
-  // Gate /admin to admin-role only
-  if (PROTECTED_ADMIN.test(pathname) && user) {
-    const { data: profile } = await supabase.from('revo_users').select('role').eq('id', user.id).maybeSingle();
-    if (profile?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+  // Role-based gating for /admin and /estimator
+  if ((PROTECTED_ADMIN.test(pathname) || PROTECTED_ESTIMATOR.test(pathname)) && user) {
+    const { data: profile } = await supabase
+      .from('revo_users').select('role').eq('id', user.id).maybeSingle();
+    const role = profile?.role;
+    if (PROTECTED_ADMIN.test(pathname) && role !== 'admin') {
+      return NextResponse.redirect(new URL(destForRole(role), request.url));
+    }
+    if (PROTECTED_ESTIMATOR.test(pathname) && role !== 'estimator' && role !== 'admin') {
+      return NextResponse.redirect(new URL(destForRole(role), request.url));
     }
   }
 

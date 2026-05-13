@@ -44,3 +44,6 @@ Thumbs.db
 # Misc
 *.pem
 .cache
+
+# User-uploaded files (runtime artifacts — never commit)
+public/uploads/

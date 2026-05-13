@@ -1,35 +1,153 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@500;700;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
+  /* Color tokens */
   --revo-bg: #0A0F1F;
+  --revo-bg-deep: #050812;
   --revo-surface: #0F1729;
   --revo-ink: #E5E9F2;
   --revo-accent: #1F3C88;
   --revo-accent-2: #3B82F6;
   --revo-gold: #D4A24C;
+  --revo-gold-bright: #E5B366;
+
+  /* Easing — defined once, used everywhere */
+  --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-decel: cubic-bezier(0, 0, 0.2, 1);
+
+  /* Spacing rhythm — 8px base */
+  --space-1: 8px;  --space-2: 16px;  --space-3: 24px;
+  --space-4: 32px; --space-5: 48px;  --space-6: 64px;
+
+  /* Type fluid */
+  --type-display: clamp(2.75rem, 5vw + 1rem, 5.25rem);
+  --type-headline: clamp(2rem, 3vw + 0.75rem, 3rem);
+  --type-section: clamp(1.5rem, 1.5vw + 0.75rem, 2rem);
+  --type-body: clamp(1rem, 0.4vw + 0.875rem, 1.125rem);
 }
 
-html, body { background: var(--revo-bg); color: var(--revo-ink); font-family: 'Inter', system-ui, sans-serif; }
-h1, h2, h3, .display { font-family: 'Playfair Display', serif; letter-spacing: -0.02em; }
+html, body {
+  background: var(--revo-bg);
+  color: var(--revo-ink);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
 
+h1, h2, h3, .display, .font-display {
+  font-family: 'Playfair Display', serif;
+  letter-spacing: -0.02em;
+}
+
+/* Focus rings — keyboard-only via :focus-visible */
+*:focus { outline: none; }
+*:focus-visible {
+  outline: 2px solid var(--revo-gold);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Hero bg */
 .revo-hero-bg {
   background:
-    radial-gradient(ellipse at top, rgba(31, 60, 136, 0.4), transparent 60%),
-    linear-gradient(180deg, #0A0F1F 0%, #050812 100%);
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(31, 60, 136, 0.45), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 90% 110%, rgba(212, 162, 76, 0.08), transparent 70%),
+    linear-gradient(180deg, var(--revo-bg) 0%, var(--revo-bg-deep) 100%);
 }
 
 .revo-gradient-text {
-  background: linear-gradient(90deg, #D4A24C, #3B82F6);
+  background: linear-gradient(90deg, var(--revo-gold), var(--revo-accent-2));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-@keyframes revo-fade-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-.revo-fade-up { animation: revo-fade-up 700ms cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
-.revo-fade-up-delay-1 { animation-delay: 150ms; }
-.revo-fade-up-delay-2 { animation-delay: 300ms; }
-.revo-fade-up-delay-3 { animation-delay: 450ms; }
+/* Animation tokens */
+@keyframes revo-fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.revo-fade-up { animation: revo-fade-up 700ms var(--ease-emphasized) forwards; opacity: 0; }
+.revo-fade-up-delay-1 { animation-delay: 120ms; }
+.revo-fade-up-delay-2 { animation-delay: 240ms; }
+.revo-fade-up-delay-3 { animation-delay: 360ms; }
+.revo-fade-up-delay-4 { animation-delay: 480ms; }
+
+@keyframes revo-glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 162, 76, 0.45), 0 8px 32px rgba(212, 162, 76, 0.25); }
+  50% { box-shadow: 0 0 0 10px rgba(212, 162, 76, 0), 0 8px 32px rgba(212, 162, 76, 0.45); }
+}
+
+@keyframes revo-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Button system — primary (gold), secondary (ghost), gradient */
+.revo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 32px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 220ms var(--ease-emphasized), box-shadow 220ms var(--ease-emphasized), background 220ms var(--ease-standard);
+  will-change: transform, box-shadow;
+}
+
+.revo-btn-primary {
+  background: linear-gradient(135deg, var(--revo-gold) 0%, var(--revo-gold-bright) 100%);
+  color: var(--revo-bg);
+  box-shadow: 0 0 0 0 rgba(212, 162, 76, 0.45), 0 8px 24px rgba(212, 162, 76, 0.30);
+  animation: revo-glow-pulse 2.8s var(--ease-standard) infinite;
+}
+.revo-btn-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 0 0 6px rgba(212, 162, 76, 0.18), 0 14px 40px rgba(212, 162, 76, 0.55);
+  animation-play-state: paused;
+}
+.revo-btn-primary:active { transform: translateY(0) scale(0.99); }
+
+.revo-btn-gradient {
+  background: linear-gradient(110deg, var(--revo-gold) 0%, var(--revo-accent-2) 50%, var(--revo-gold) 100%);
+  background-size: 200% 100%;
+  animation: revo-shimmer 6s linear infinite;
+  color: var(--revo-bg);
+  box-shadow: 0 8px 28px rgba(59, 130, 246, 0.35), 0 0 60px rgba(212, 162, 76, 0.15);
+}
+.revo-btn-gradient:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 14px 44px rgba(59, 130, 246, 0.55), 0 0 80px rgba(212, 162, 76, 0.30);
+}
+
+.revo-btn-ghost {
+  background: rgba(229, 233, 242, 0.04);
+  color: var(--revo-ink);
+  border-color: rgba(229, 233, 242, 0.18);
+  backdrop-filter: blur(6px);
+}
+.revo-btn-ghost:hover {
+  transform: translateY(-2px);
+  border-color: rgba(229, 233, 242, 0.45);
+  background: rgba(229, 233, 242, 0.08);
+}
+
+/* Reduced motion — respect user preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  .revo-fade-up { opacity: 1 !important; transform: none !important; }
+  .revo-btn-primary { animation: none; }
+  .revo-btn-gradient { animation: none; }
+}
