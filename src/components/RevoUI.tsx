@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Users, Briefcase, GraduationCap, MessageSquare, Trophy, HelpCircle, MessageCircleQuestion, User, Settings, Shield, FileText, Mail, BarChart3, Home, LogOut, Menu, X, Wand2, Calculator, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, Users, Briefcase, GraduationCap, MessageSquare, Trophy, HelpCircle, MessageCircleQuestion, User, Settings, Shield, FileText, Mail, BarChart3, Home, LogOut, Menu, X, Wand2, Calculator, ClipboardList, MapPin, Camera } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 const EXPERT_NAV = [
@@ -31,6 +31,19 @@ const ESTIMATOR_NAV = [
   { href: '/dashboard/profile', label: 'My Profile', icon: User },
 ];
 
+// Scout nav — field-only role per Iteration 3. Sees their captured leads,
+// the AI scanner, and their profile. No customer-management surfaces — those
+// require can_manage_customers=true (enforced by RLS, mirrored in nav here).
+const SCOUT_NAV = [
+  { href: '/dashboard', label: 'My Leads', icon: LayoutDashboard },
+  { href: '/dashboard/scout/new', label: 'Quick Scout', icon: Camera },
+  { href: '/dashboard/roof-analyze', label: 'AI Roof Analysis', icon: Wand2 },
+  { href: '/dashboard/courses', label: 'Course', icon: GraduationCap },
+  { href: '/dashboard/chatbot', label: 'Ask Revo AI', icon: MessageCircleQuestion },
+  { href: '/dashboard/faq', label: 'FAQ', icon: HelpCircle },
+  { href: '/dashboard/profile', label: 'My Profile', icon: User },
+];
+
 const ADMIN_NAV = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
   { href: '/admin/experts', label: 'Experts', icon: Users },
@@ -45,12 +58,20 @@ const ADMIN_NAV = [
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
-export function Sidebar({ variant, userName, role }: { variant: 'expert' | 'admin' | 'estimator'; userName: string; role: string }) {
+export function Sidebar({ variant, userName, role }: { variant: 'expert' | 'admin' | 'estimator' | 'scout'; userName: string; role: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const nav = variant === 'admin' ? ADMIN_NAV : variant === 'estimator' ? ESTIMATOR_NAV : EXPERT_NAV;
-  const variantLabel = variant === 'admin' ? 'Admin' : variant === 'estimator' ? 'Estimator' : 'Expert';
+  const nav =
+    variant === 'admin' ? ADMIN_NAV
+    : variant === 'estimator' ? ESTIMATOR_NAV
+    : variant === 'scout' ? SCOUT_NAV
+    : EXPERT_NAV;
+  const variantLabel =
+    variant === 'admin' ? 'Admin'
+    : variant === 'estimator' ? 'Estimator'
+    : variant === 'scout' ? 'Scout'
+    : 'Expert';
 
   useEffect(() => { setOpen(false); }, [pathname]);
   useEffect(() => {

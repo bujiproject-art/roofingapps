@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef, use } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Upload, Sparkles, Loader2, MapPin, Phone, Mail, ImageIcon, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Upload, Sparkles, Loader2, MapPin, Phone, Mail, ImageIcon, Trash2, ChevronDown, Mic, ShieldCheck, Satellite, Brain } from 'lucide-react';
 import { StatusPill } from '@/components/RevoUI';
 import { SatelliteView } from '@/components/SatelliteView';
 
@@ -59,24 +59,128 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         </div>
       </div>
 
-      {/* Satellite view of the property — auto-fetched from address */}
-      {customer.address && (
-        <section className="mb-8 bg-[#0F1729] border border-[#E5E9F2]/10 rounded-xl overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3 border-b border-[#E5E9F2]/10">
-            <div>
-              <div className="text-[10px] uppercase tracking-widest text-[#D4A24C] font-semibold">Property satellite view</div>
-              <div className="text-xs text-[#E5E9F2]/50">Auto-fetched from address · rooftop zoom</div>
+      {/* Iteration 3 — collapsible intel panels. Native <details> for zero-JS
+          surgical add. Each panel is independent and degrades gracefully
+          when its data source isn't wired yet. */}
+      <div className="mb-8 space-y-3">
+        {/* Satellite view of the property — auto-fetched from address */}
+        {customer.address && (
+          <details className="group bg-[#0F1729] border border-[#E5E9F2]/10 rounded-xl overflow-hidden" open>
+            <summary className="flex items-center justify-between px-5 py-3 border-b border-[#E5E9F2]/10 cursor-pointer hover:bg-white/5 transition list-none">
+              <div className="flex items-center gap-3">
+                <Satellite className="w-4 h-4 text-[#D4A24C]" />
+                <div>
+                  <div className="text-[10px] uppercase tracking-widest text-[#D4A24C] font-semibold">Property satellite view</div>
+                  <div className="text-xs text-[#E5E9F2]/50">Auto-fetched from address · rooftop zoom</div>
+                </div>
+              </div>
+              <ChevronDown className="w-4 h-4 text-[#E5E9F2]/50 transition group-open:rotate-180" />
+            </summary>
+            <div className="p-4">
+              <SatelliteView
+                address={[customer.address, customer.city, customer.state, customer.zip].filter(Boolean).join(', ')}
+                zoom={19}
+                className="max-w-xl mx-auto"
+              />
             </div>
+          </details>
+        )}
+
+        {/* AI Report rollup — most recent job's drone_report */}
+        <details className="group bg-[#0F1729] border border-[#E5E9F2]/10 rounded-xl overflow-hidden">
+          <summary className="flex items-center justify-between px-5 py-3 cursor-pointer hover:bg-white/5 transition list-none">
+            <div className="flex items-center gap-3">
+              <Brain className="w-4 h-4 text-[#3B82F6]" />
+              <div>
+                <div className="text-[10px] uppercase tracking-widest text-[#3B82F6] font-semibold">AI Report rollup</div>
+                <div className="text-xs text-[#E5E9F2]/50">
+                  {(() => {
+                    const latest = jobs.find(j => j.drone_report);
+                    return latest?.drone_report
+                      ? `Latest analysis: condition ${latest.drone_report.condition_score}/10 · urgency ${latest.drone_report.urgency?.replace(/_/g, ' ') || '—'}`
+                      : 'No AI analysis yet. Run one from a job below.';
+                  })()}
+                </div>
+              </div>
+            </div>
+            <ChevronDown className="w-4 h-4 text-[#E5E9F2]/50 transition group-open:rotate-180" />
+          </summary>
+          <div className="p-5 border-t border-[#E5E9F2]/10">
+            {(() => {
+              const latest = jobs.find(j => j.drone_report);
+              if (!latest?.drone_report) {
+                return (
+                  <p className="text-sm text-[#E5E9F2]/50 text-center py-4">
+                    No AI roof report on file. Add a job below and tap <span className="text-[#D4A24C]">Run AI Roof Analysis</span> to generate one.
+                  </p>
+                );
+              }
+              const r = latest.drone_report;
+              return (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <Stat label="Condition" value={`${r.condition_score}/10`} />
+                    <Stat label="Est. age" value={`${r.estimated_age_years ?? '?'} yrs`} />
+                    <Stat label="Urgency" value={(r.urgency || '—').replace(/_/g, ' ')} />
+                    <Stat label="Repair range" value={r.estimated_repair_cost_low ? `$${r.estimated_repair_cost_low.toLocaleString()}–$${(r.estimated_repair_cost_high || 0).toLocaleString()}` : '—'} />
+                  </div>
+                  {r.damage_types && r.damage_types.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {r.damage_types.map((d) => (
+                        <span key={d} className="text-[10px] uppercase tracking-wider bg-[#D4A24C]/10 border border-[#D4A24C]/30 rounded-full px-2 py-1 text-[#D4A24C]">
+                          {d.replace(/_/g, ' ')}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {r.narrative && <p className="text-sm text-[#E5E9F2]/80 whitespace-pre-line">{r.narrative}</p>}
+                </div>
+              );
+            })()}
           </div>
-          <div className="p-4">
-            <SatelliteView
-              address={[customer.address, customer.city, customer.state, customer.zip].filter(Boolean).join(', ')}
-              zoom={19}
-              className="max-w-xl mx-auto"
-            />
+        </details>
+
+        {/* Voice Notes (Scout dictation) — placeholder, table lands in next dispatch */}
+        <details className="group bg-[#0F1729] border border-[#E5E9F2]/10 rounded-xl overflow-hidden">
+          <summary className="flex items-center justify-between px-5 py-3 cursor-pointer hover:bg-white/5 transition list-none">
+            <div className="flex items-center gap-3">
+              <Mic className="w-4 h-4 text-amber-300" />
+              <div>
+                <div className="text-[10px] uppercase tracking-widest text-amber-300 font-semibold">Voice notes</div>
+                <div className="text-xs text-[#E5E9F2]/50">Scout dictations attached to this customer record</div>
+              </div>
+            </div>
+            <ChevronDown className="w-4 h-4 text-[#E5E9F2]/50 transition group-open:rotate-180" />
+          </summary>
+          <div className="p-5 border-t border-[#E5E9F2]/10 text-center text-sm text-[#E5E9F2]/50">
+            <Mic className="w-8 h-8 mx-auto mb-2 text-[#E5E9F2]/20" />
+            <p>
+              No voice notes yet. When a scout submits a dictation correction with their capture, it will appear here for the Estimator to review.
+            </p>
           </div>
-        </section>
-      )}
+        </details>
+
+        {/* Soft Credit / Background — placeholder, BatchData API in next dispatch */}
+        <details className="group bg-[#0F1729] border border-[#E5E9F2]/10 rounded-xl overflow-hidden">
+          <summary className="flex items-center justify-between px-5 py-3 cursor-pointer hover:bg-white/5 transition list-none">
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="w-4 h-4 text-emerald-300" />
+              <div>
+                <div className="text-[10px] uppercase tracking-widest text-emerald-300 font-semibold">Soft credit & background</div>
+                <div className="text-xs text-[#E5E9F2]/50">Property ownership · equity · liens · soft credit indicator</div>
+              </div>
+            </div>
+            <ChevronDown className="w-4 h-4 text-[#E5E9F2]/50 transition group-open:rotate-180" />
+          </summary>
+          <div className="p-5 border-t border-[#E5E9F2]/10 text-center text-sm text-[#E5E9F2]/50">
+            <ShieldCheck className="w-8 h-8 mx-auto mb-2 text-[#E5E9F2]/20" />
+            <p className="mb-1">Soft credit report not configured.</p>
+            <p className="text-xs text-[#E5E9F2]/40">
+              Wire BatchData (or chosen provider) in Admin → Settings to enable property + equity + lien lookups for closers.
+            </p>
+          </div>
+        </details>
+      </div>
 
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-display text-2xl">Jobs</h2>
