@@ -3,7 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import { StatusPill } from '@/components/RevoUI';
-import { Briefcase, Users, DollarSign, AlertTriangle, Cloud, Sparkles, ArrowRight, Plus } from 'lucide-react';
+import { Briefcase, Users, DollarSign, AlertTriangle, Cloud, Sparkles, ArrowRight, Plus, Camera, MapPin, Wand2 } from 'lucide-react';
+import ScoutTimeline from './scout/_components/ScoutTimeline';
 
 export default async function ExpertDashboard() {
   const supabase = await createClient();
@@ -13,6 +14,13 @@ export default async function ExpertDashboard() {
   const { data: profile } = await supabaseAdmin
     .from('revo_users').select('*').eq('id', user.id).maybeSingle();
   if (!profile) redirect('/register');
+
+  // Iteration 3 — Scout-mode users see the timeline view, not the operator
+  // KPI dashboard. Defer to a dedicated component so the operator path stays
+  // unchanged for backward-compat.
+  if (profile.role === 'scout') {
+    return <ScoutTimeline expertId={user.id} firstName={profile.first_name} serviceArea={profile.service_area} />;
+  }
 
   const [{ data: customers }, { data: jobs }] = await Promise.all([
     supabaseAdmin.from('revo_customers').select('*').eq('expert_id', user.id).order('created_at', { ascending: false }).limit(50),
@@ -32,7 +40,7 @@ export default async function ExpertDashboard() {
 
   return (
     <main className="p-8 max-w-7xl mx-auto">
-      <header className="flex items-end justify-between mb-8">
+      <header className="flex items-end justify-between mb-6">
         <div>
           <h1 className="font-display text-4xl mb-1">Welcome back, {profile.first_name || 'Expert'}.</h1>
           <p className="text-[#E5E9F2]/60">Service area: {profile.service_area || 'Set your service area in your profile →'}</p>
@@ -41,6 +49,30 @@ export default async function ExpertDashboard() {
           <Plus className="w-4 h-4" /> Add customer
         </Link>
       </header>
+
+      {/* Iteration 3 — Quick Scout CTA. Visible to all operators; lets any
+          field rep capture a lead the fast way (GPS → property → satellite →
+          AI → submit) without leaving the dashboard. Stays above the KPI fold. */}
+      <Link
+        href="/dashboard/scout/new"
+        className="group relative block mb-8 overflow-hidden rounded-2xl border border-[#D4A24C]/30 bg-gradient-to-br from-[#D4A24C]/15 via-[#1F3C88]/10 to-[#0A0F1F] p-5 transition hover:border-[#D4A24C]/60"
+      >
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#D4A24C] to-[#E5B366] text-[#0A0F1F] shadow-lg shadow-[#D4A24C]/30">
+              <Camera className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="font-display text-lg leading-tight">Quick Scout</div>
+              <div className="text-xs text-[#E5E9F2]/70">
+                <MapPin className="mr-1 inline h-3 w-3" /> GPS the address ·{' '}
+                <Wand2 className="mr-1 inline h-3 w-3" /> Run AI on the roof · submit in under 5 min
+              </div>
+            </div>
+          </div>
+          <ArrowRight className="h-5 w-5 text-[#D4A24C] transition group-hover:translate-x-1" />
+        </div>
+      </Link>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Kpi icon={Users} label="Customers" value={customerCount.toString()} sub={`${activeJobs} active jobs`} accent="gold" />
