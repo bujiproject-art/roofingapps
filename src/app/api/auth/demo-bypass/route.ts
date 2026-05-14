@@ -1,25 +1,15 @@
-// DEMO-ONLY bypass route — accepts no code; if reached, generates a magic-link
-// token for the demo admin. Gated to non-production so a misconfigured
-// deployment can't expose this in front of a real client.
-//
-// Safe states:
-//   - NODE_ENV=development          → enabled (local dev)
-//   - REVO_ALLOW_DEMO_BYPASS=true   → enabled (explicit opt-in, e.g. demo box)
-//   - anything else                 → 404 (route effectively removed)
+// DEMO-ONLY bypass route — generates a magic-link token for the demo admin.
+// Hard-gated in production per Iteration 3 Phase 1 Section 1. The /login page
+// 777777 code stays as a separate surface and is unaffected by this gate.
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
 const DEMO_EMAIL = 'bujiproject@gmail.com';
 
-function demoEnabled(): boolean {
-  if (process.env.NODE_ENV === 'development') return true;
-  if (process.env.REVO_ALLOW_DEMO_BYPASS === 'true') return true;
-  return false;
-}
-
 export async function POST() {
-  if (!demoEnabled()) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  // Iteration 3 — production hard gate. Demo bypass MUST NOT respond in prod.
+  if (process.env.NODE_ENV === 'production') {
+    return new Response('Not found', { status: 404 });
   }
 
   const { data, error } = await supabaseAdmin.auth.admin.generateLink({

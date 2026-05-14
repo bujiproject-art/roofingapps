@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import { StatusPill } from '@/components/RevoUI';
+import { CrossPromoCTA } from '@/components/RevoCrossPromo';
 import { Briefcase, Users, DollarSign, AlertTriangle, Cloud, Sparkles, ArrowRight, Plus, Camera, MapPin, Wand2 } from 'lucide-react';
 import ScoutTimeline from './scout/_components/ScoutTimeline';
 
@@ -139,6 +140,8 @@ export default async function ExpertDashboard() {
           </div>
         </section>
       </div>
+
+      <CrossPromoCTA variant="wide" />
     </main>
   );
 }
