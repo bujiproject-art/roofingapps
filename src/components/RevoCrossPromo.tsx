@@ -10,11 +10,13 @@ export async function CrossPromoCTA({ variant = 'wide' }: { variant?: 'wide' | '
   const s = await getSettings(['cross_promo_copy', 'paul_affiliate_code']);
   const copy = s.cross_promo_copy || DEFAULTS.cross_promo_copy;
   const affiliate = s.paul_affiliate_code || DEFAULTS.paul_affiliate_code;
-  const href = `https://agentmidas.xyz/signup?ref=${encodeURIComponent(affiliate)}&tier=4`;
+  const href = '/dashboard/grow-your-business';
+  const _affiliate = affiliate;
+  void _affiliate;
 
   if (variant === 'card') {
     return (
-      <Link href={href} target="_blank" rel="noopener" className="group block p-5 rounded-xl bg-gradient-to-br from-[#D4A24C]/10 to-[#3B82F6]/10 border border-[#D4A24C]/30 hover:border-[#D4A24C]/60 transition">
+      <Link href={href} className="group block p-5 rounded-xl bg-gradient-to-br from-[#D4A24C]/10 to-[#3B82F6]/10 border border-[#D4A24C]/30 hover:border-[#D4A24C]/60 transition">
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="w-4 h-4 text-[#D4A24C]" />
           <span className="text-xs uppercase tracking-widest text-[#D4A24C] font-semibold">Grow your business</span>
@@ -40,8 +42,6 @@ export async function CrossPromoCTA({ variant = 'wide' }: { variant?: 'wide' | '
         </div>
         <Link
           href={href}
-          target="_blank"
-          rel="noopener"
           className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#D4A24C] text-[#0A0F1F] font-semibold text-sm hover:bg-[#E5B366] transition whitespace-nowrap"
         >
           Start Tier 4 — $300/mo <ArrowRight className="w-4 h-4" />
