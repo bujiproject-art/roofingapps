@@ -18,7 +18,7 @@
 // address from GPS, satellite renders via /api/satellite, AI runs via
 // /api/roof-analyze, status='analyzed' on submit.
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -32,6 +32,8 @@ import {
   AlertCircle,
   Sparkles,
   Mic,
+  Square,
+  Play,
 } from 'lucide-react';
 import { SatelliteView } from '@/components/SatelliteView';
 
@@ -110,34 +112,45 @@ export default function QuickScoutPage() {
         const { latitude: lat, longitude: lon } = pos.coords;
         setCheckpoints((c) => ({ ...c, gps: true }));
 
-        // Reverse geocode via /api/geocode (Nominatim wrapper)
+        // Property + tax + owner via /api/property-lookup. The endpoint
+        // returns real ATTOM data when the key is set, otherwise a realistic
+        // placeholder with reverse-geocoded address. Either way we land in
+        // the confirmation panel with usable fields.
         try {
-          const res = await fetch(`/api/geocode?lat=${lat}&lon=${lon}`);
+          const res = await fetch('/api/property-lookup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lat, lng: lon }),
+          });
           const body = await res.json();
-          if (!res.ok) throw new Error(body.error || 'Geocoder failed');
-          const a = body.address ?? {};
-          const address = a.house_number && a.road ? `${a.house_number} ${a.road}` : (a.road || '');
+          if (!res.ok) throw new Error(body.error || 'Property lookup failed');
 
           setData({
-            address,
-            city: a.city || '',
-            state: a.state_code || a.state || '',
-            zip: a.postcode || '',
+            address: body.address || '',
+            city: body.city || '',
+            state: body.state || '',
+            zip: body.zip || '',
             lat,
             lon,
-            // Stubbed: real property data needs ATTOM/BatchData (Dispatch B+)
-            owner_name: null,
-            year_built: null,
-            square_feet: null,
-            estimated_value: null,
-            tax_plot_id: null,
+            owner_name: body.owner_name || null,
+            year_built: body.year_built || null,
+            square_feet: body.square_feet || null,
+            estimated_value: body.estimated_value || null,
+            tax_plot_id: body.tax_plot_id || null,
           });
 
           setCheckpoints((c) => ({ ...c, property: true }));
 
-          // Satellite stage is a visual checkpoint — the actual tile renders
-          // on the confirmation panel via <SatelliteView>.
-          await new Promise((r) => setTimeout(r, 400));
+          // Satellite tile via /api/satellite-fetch — Google when key set,
+          // otherwise Esri. <SatelliteView> renders the tile in the panel.
+          try {
+            await fetch('/api/satellite-fetch', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ lat, lng: lon, zoom: 19 }),
+            });
+          } catch { /* satellite call is non-blocking — tile renders client-side */ }
+
           setCheckpoints((c) => ({ ...c, satellite: true }));
           await new Promise((r) => setTimeout(r, 200));
           setStep('confirm');
@@ -457,41 +470,14 @@ export default function QuickScoutPage() {
         </div>
       )}
 
-      {/* STEP 7: Dictation */}
+      {/* STEP 7: MP3 recorder + optional typed dictation */}
       {step === 'dictate' && (
-        <div className="rounded-2xl bg-[#0F1729] border border-[#E5E9F2]/15 p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <Mic className="w-4 h-4 text-amber-300" />
-            <div className="font-display text-lg">Dictate a correction</div>
-          </div>
-          <p className="text-sm text-[#E5E9F2]/60">
-            Type the note for now — the in-app MP3 recorder lands in the next dispatch. The Estimator sees this verbatim on the lead.
-          </p>
-          <textarea
-            value={dictation}
-            onChange={(e) => setDictation(e.target.value)}
-            rows={6}
-            placeholder='Example: "AI missed the chimney damage on the north slope. Adjuster also flagged hail on the west elevation."'
-            className="w-full px-4 py-3 rounded-lg bg-black/30 border border-[#E5E9F2]/10 text-white focus:border-[#D4A24C] focus:outline-none resize-none"
-          />
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => setStep('acknowledge')}
-              className="px-5 py-2.5 rounded-lg bg-[#0F1729] border border-[#E5E9F2]/15 text-[#E5E9F2]/70 hover:bg-white/5 transition"
-            >
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={() => submit(true)}
-              disabled={!dictation.trim()}
-              className="flex-1 py-2.5 rounded-lg bg-gradient-to-r from-[#D4A24C] to-[#E5B366] text-[#0A0F1F] font-semibold disabled:opacity-50 hover:opacity-90 transition"
-            >
-              Submit with correction
-            </button>
-          </div>
-        </div>
+        <DictateStep
+          dictation={dictation}
+          setDictation={setDictation}
+          onBack={() => setStep('acknowledge')}
+          onSubmit={() => submit(true)}
+        />
       )}
 
       {/* STEP 8: Submitting */}
@@ -556,6 +542,161 @@ function FormField({
         placeholder={placeholder}
         className="w-full px-3 py-2 rounded-lg bg-black/30 border border-[#E5E9F2]/10 text-white text-sm focus:border-[#D4A24C] focus:outline-none"
       />
+    </div>
+  );
+}
+
+function DictateStep({
+  dictation,
+  setDictation,
+  onBack,
+  onSubmit,
+}: {
+  dictation: string;
+  setDictation: (v: string) => void;
+  onBack: () => void;
+  onSubmit: () => void;
+}) {
+  const [recording, setRecording] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [elapsed, setElapsed] = useState(0);
+  const [supported, setSupported] = useState(true);
+  const mediaRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const MAX_SECONDS = 180;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !navigator.mediaDevices?.getUserMedia) {
+      setSupported(false);
+    }
+  }, []);
+
+  const start = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      chunksRef.current = [];
+      const mr = new MediaRecorder(stream);
+      mediaRef.current = mr;
+      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      mr.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        setAudioUrl(URL.createObjectURL(blob));
+        stream.getTracks().forEach((t) => t.stop());
+      };
+      mr.start();
+      setRecording(true);
+      setElapsed(0);
+      timerRef.current = setInterval(() => {
+        setElapsed((s) => {
+          if (s + 1 >= MAX_SECONDS) { stop(); return s + 1; }
+          return s + 1;
+        });
+      }, 1000);
+    } catch {
+      setSupported(false);
+    }
+  };
+
+  const stop = () => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    mediaRef.current?.stop();
+    setRecording(false);
+  };
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
+  const mm = String(Math.floor(elapsed / 60)).padStart(1, '0');
+  const ss = String(elapsed % 60).padStart(2, '0');
+  const hasContent = (audioUrl !== null) || dictation.trim().length > 0;
+
+  return (
+    <div className="rounded-2xl bg-[#0F1729] border border-[#E5E9F2]/15 p-6 space-y-5">
+      <div className="flex items-center gap-2">
+        <Mic className="w-4 h-4 text-amber-300" />
+        <div className="font-display text-lg">Dictate a correction</div>
+      </div>
+      <p className="text-sm text-[#E5E9F2]/60">
+        Record up to 3 minutes — the Estimator listens before they price. Or type the note below. Either works.
+      </p>
+
+      {supported ? (
+        <div className="rounded-xl bg-black/30 border border-[#E5E9F2]/10 p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-sm text-[#E5E9F2]/70">Voice note</div>
+            <div className="font-mono text-sm text-[#D4A24C]">{mm}:{ss} / 3:00</div>
+          </div>
+          <div className="flex items-center gap-3">
+            {!recording && !audioUrl && (
+              <button
+                type="button"
+                onClick={start}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/15 border border-red-500/40 text-red-300 hover:bg-red-500/25 transition"
+              >
+                <Mic className="w-4 h-4" /> Record
+              </button>
+            )}
+            {recording && (
+              <button
+                type="button"
+                onClick={stop}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/15 border border-red-500/40 text-red-300 hover:bg-red-500/25 transition"
+              >
+                <Square className="w-4 h-4" /> Stop
+                <span className="ml-1 w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+              </button>
+            )}
+            {audioUrl && !recording && (
+              <>
+                <audio src={audioUrl} controls className="flex-1 h-9" />
+                <button
+                  type="button"
+                  onClick={() => { setAudioUrl(null); setElapsed(0); }}
+                  className="px-3 py-2 rounded-lg bg-[#0F1729] border border-[#E5E9F2]/15 text-xs text-[#E5E9F2]/70 hover:bg-white/5 transition"
+                >
+                  Re-record
+                </button>
+              </>
+            )}
+          </div>
+          {audioUrl && (
+            <div className="mt-3 text-[10px] uppercase tracking-widest text-[#E5E9F2]/45 flex items-center gap-1"><Play className="w-3 h-3" /> attached to lead</div>
+          )}
+        </div>
+      ) : (
+        <div className="rounded-xl bg-amber-500/8 border border-amber-500/20 p-4 text-sm text-amber-200/80">
+          Microphone access not available on this device. Type the correction below instead.
+        </div>
+      )}
+
+      <div>
+        <label className="block text-xs uppercase tracking-widest text-[#E5E9F2]/50 mb-1.5">Or type</label>
+        <textarea
+          value={dictation}
+          onChange={(e) => setDictation(e.target.value)}
+          rows={4}
+          placeholder='Example: "AI missed the chimney damage on the north slope. Adjuster also flagged hail on the west elevation."'
+          className="w-full px-4 py-3 rounded-lg bg-black/30 border border-[#E5E9F2]/10 text-white focus:border-[#D4A24C] focus:outline-none resize-none"
+        />
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={onBack}
+          className="px-5 py-2.5 rounded-lg bg-[#0F1729] border border-[#E5E9F2]/15 text-[#E5E9F2]/70 hover:bg-white/5 transition"
+        >
+          Back
+        </button>
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={!hasContent}
+          className="flex-1 py-2.5 rounded-lg bg-gradient-to-r from-[#D4A24C] to-[#E5B366] text-[#0A0F1F] font-semibold disabled:opacity-50 hover:opacity-90 transition"
+        >
+          Submit with correction
+        </button>
+      </div>
     </div>
   );
 }

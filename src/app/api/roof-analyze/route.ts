@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { getSetting, audit } from '@/lib/revo/admin-settings';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -88,11 +89,18 @@ export async function POST(request: Request) {
 
   const body = await request.json();
   const imageUrls: string[] = body.image_urls || [];
-  if (imageUrls.length === 0) return NextResponse.json({ error: 'No images' }, { status: 400 });
+  const satelliteLat: number | null = body.satellite_lat ?? null;
+  const satelliteLon: number | null = body.satellite_lon ?? null;
+  const allowEmpty = satelliteLat !== null && satelliteLon !== null;
+  if (imageUrls.length === 0 && !allowEmpty) return NextResponse.json({ error: 'No images' }, { status: 400 });
 
-  // Resolve API key — prefer admin-stored, fall back to env
-  const { data: settings } = await supabaseAdmin.from('revo_settings').select('anthropic_api_key, active_llm_provider').eq('id', 1).maybeSingle();
-  const apiKey = settings?.anthropic_api_key || process.env.ANTHROPIC_API_KEY;
+  // Resolve API key — admin-stored (revo_admin_settings) first, then legacy
+  // revo_settings row, then env var.
+  let apiKey = await getSetting('ANTHROPIC_API_KEY');
+  if (!apiKey) {
+    const { data: legacy } = await supabaseAdmin.from('revo_settings').select('anthropic_api_key').eq('id', 1).maybeSingle();
+    apiKey = legacy?.anthropic_api_key || process.env.ANTHROPIC_API_KEY || null;
+  }
 
   // Read local image files
   const blocks = (await Promise.all(imageUrls.slice(0, 4).map(readFileAsBase64))).filter((b): b is { data: string; mediaType: string } => b !== null);
@@ -100,11 +108,13 @@ export async function POST(request: Request) {
   if (apiKey && blocks.length > 0) {
     try {
       const analysis = await callClaudeVision(apiKey, blocks);
+      await audit(user.id, 'roof.analyze', null, { provider: 'anthropic', photos: blocks.length });
       return NextResponse.json({
         analysis,
         photos_analyzed: blocks.length,
         model: 'claude-3-5-sonnet-20241022',
         provider: 'anthropic',
+        _placeholder: false,
         analyzed_at: new Date().toISOString(),
       });
     } catch (err) {
@@ -116,13 +126,16 @@ export async function POST(request: Request) {
 
   // Fallback path — no key, no images, or Claude failure
   await new Promise(r => setTimeout(r, 1800 + Math.random() * 1400));
-  const seed = imageUrls.join('|').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  const seedSrc = imageUrls.length > 0 ? imageUrls.join('|') : `${satelliteLat ?? 0}|${satelliteLon ?? 0}`;
+  const seed = Math.abs(seedSrc.split('').reduce((a, c) => a + c.charCodeAt(0), 0));
   const sample = FALLBACK_SAMPLES[seed % FALLBACK_SAMPLES.length];
+  await audit(user.id, 'roof.analyze', null, { provider: 'placeholder', key_present: !!apiKey, photos: blocks.length });
   return NextResponse.json({
     analysis: sample,
     photos_analyzed: imageUrls.length,
     model: 'sample-fallback',
     provider: 'demo',
+    _placeholder: true,
     analyzed_at: new Date().toISOString(),
   });
 }
